@@ -11,6 +11,7 @@ import os
 from datetime import datetime
 import tkinter as tk
 
+#Adding state names to the tkinter selector
 OptionList = [
 "select a place",
 "world",
@@ -42,7 +43,7 @@ OptionList = [
 "Sikkim"
 ]
 
-
+#Desigining the layout for visualization of data
 axis=dict(
     showline=False,
     zeroline=False,
@@ -77,6 +78,7 @@ layout2 = dict(
 	yaxis2=dict(axis, **dict(domain=[0, 0.4+0.07], anchor='x2'))
 )
 
+#Displays the cases count of every District in the Selected State
 def display_district_data(col,state_name):
   last_updated = daily['Date'].iloc[-1].strftime("%d/%m/%Y")
   date = daily['Date'].iloc[-1] - timedelta(days=30)
@@ -87,7 +89,6 @@ def display_district_data(col,state_name):
   active = confirmed - recovered - deaths
   print("Collected data")
   c,r,d,a = state.loc[state['State']==state_name].values.tolist()[0][1:]
-    #c,r,d,a = str(c),str(r),str(d),str(a)
   district_values = district[['District','Confirmed','Active','Recovered','Deceased']].loc[district['State_Code']==col]
   district_values = district_values.sort_values(by=['Confirmed'],ascending=False)
   district_values = district_values[:-1]
@@ -102,6 +103,7 @@ def display_district_data(col,state_name):
   fig1 = dict(data=[table_trace, trace1, trace2, trace3, trace4], layout=layout1)
   py.plot(fig1)
 
+#Displays cases count in every State in India
 def display_state_data(col):
   last_updated = daily['Date'].iloc[-1].strftime("%d/%m/%Y")
   date = daily['Date'].iloc[-1] - timedelta(days=30)
@@ -125,6 +127,7 @@ def display_state_data(col):
   fig1 = dict(data=[table_trace, trace1, trace2, trace3, trace4], layout=layout1)
   py.plot(fig1)
 
+#Displays the Cases of every Country in the World
 def display_world_data():
   last_updated = world['Date_reported'].iloc[-1].strftime("%d/%m/%Y")
   date = world['Date_reported'].iloc[-1] - timedelta(days=30)
@@ -173,20 +176,27 @@ if __name__ == "__main__":
   opt = tk.OptionMenu(app, variable, *OptionList)
   opt.config(width=90, font=('Helvetica', 12))
   opt.pack(side="top")
+  
+  #Gathering Data from different Sources
   world = pd.read_csv('https://covid19.who.int/WHO-COVID-19-global-data.csv')
   district = pd.read_csv('https://api.covid19india.org/csv/latest/district_wise.csv',index_col='SlNo',skiprows=[1])
   state = pd.read_csv("https://api.covid19india.org/csv/latest/state_wise.csv")[['State','Confirmed','Recovered','Deaths','Active']]
   daily = pd.read_csv('https://api.covid19india.org/csv/latest/state_wise_daily.csv')
+  
+  #Data Manupulation
   district.drop(district.loc[district['State'] == 'State Unassigned'].index,inplace=True)
   state.drop(state.loc[state['State'] == 'State Unassigned'].index,inplace=True)
   for i,x in enumerate(district['District']):
 	  if x == 'Unknown': district['District'].iloc[i] = district['State'].iloc[i]
   daily['Date'] = pd.to_datetime(daily['Date'])
   world['Date_reported'] = pd.to_datetime(world['Date_reported'])
+  
+  #Collecting the State names for the District funtion
   state_names={}
   for x in district['State'].unique():
     state_names[x.lower()]=district['State_Code'].loc[district['State']==x].values[0]
-  print(district['State'].unique())
   variable.trace("w", callback)
+
+  #Starting the Application
   app.mainloop()
       
